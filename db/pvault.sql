@@ -275,8 +275,6 @@ CREATE TABLE `ingSuppliers` (
   `url` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `platform` varchar(255) DEFAULT NULL,
-  `price_tag_start` text DEFAULT NULL,
-  `price_tag_end` text DEFAULT NULL,
   `add_costs` varchar(255) DEFAULT NULL,
   `price_per_size` INT NOT NULL DEFAULT '0', 
   `notes` text  DEFAULT NULL,
@@ -890,7 +888,6 @@ CREATE TABLE `system_settings` (
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 INSERT INTO `system_settings` ( `key_name`, `value`, `slug`, `type`, `description`) VALUES
-('SYSTEM_pubChem', '0', 'Enable PubChem', 'checkbox', 'Enable or disable pubChem integration'),
 ('SYSTEM_server_url', '<UPDATE_TO_YOUR_SERVER_URL>', 'Server URL', 'text', 'This is your Perfumers Vault installation server URL.'),
 ('API_enabled', '0', 'API access', 'checkbox', 'Enable or disable API access globally');
 
