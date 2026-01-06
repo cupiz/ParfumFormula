@@ -1,0 +1,23 @@
+# IFRA Standards CSV Template
+# Place your IFRA library data in this format
+# Categories use percentage values (0-100, where 0 = prohibited)
+#
+# Columns:
+# - Name: Material name
+# - CAS: CAS registry number
+# - Amendment: IFRA amendment number (e.g., "51st")
+# - Type: Prohibition/Restriction/Specification
+# - Risk: Sensitization/Phototoxicity/etc.
+# - Cat 1 through Cat 12: Category percentage limits
+#
+# Example data below:
+
+Name,CAS,Amendment,Type,Risk,Cat 1,Cat 2,Cat 3,Cat 4,Cat 5A,Cat 5B,Cat 5C,Cat 5D,Cat 6,Cat 7A,Cat 7B,Cat 8,Cat 9,Cat 10A,Cat 10B,Cat 11A,Cat 11B,Cat 12
+Bergamot oil expressed,8007-75-8,51st,Restriction,Phototoxicity,0.4,0.4,0.4,4,4,4,4,4,1,4,4,4,4,100,100,100,100,100
+Oakmoss extract,90028-68-5,51st,Restriction,Sensitization,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,100,100,100,100,100
+Coumarin,91-64-5,51st,Restriction,Sensitization,0.4,0.9,1.2,2.7,5.9,2.7,5.9,0.9,0.4,5.9,5.9,0.4,2.7,100,100,100,100,100
+Eugenol,97-53-0,51st,Restriction,Sensitization,0.5,1.5,2.5,5,10,5,10,1.5,0.5,10,10,0.5,5,100,100,100,100,100
+Linalool,78-70-6,51st,Specification,Sensitization,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100
+Limonene,5989-27-5,51st,Specification,Sensitization,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100
+Citral,5392-40-5,51st,Restriction,Sensitization,0.6,1.8,2.8,6,12.5,6,12.5,1.8,0.6,12.5,12.5,0.6,6,100,100,100,100,100
+Methyl eugenol,93-15-2,51st,Prohibition,Carcinogenicity,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P

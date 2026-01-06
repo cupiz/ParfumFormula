@@ -1,0 +1,21 @@
+# ParfumVault Data Auto-Population Module
+# Python dependencies
+
+# Database
+sqlalchemy>=2.0.0
+mysqlclient>=2.2.0
+
+# Web Scraping
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+lxml>=5.0.0
+
+# Utilities
+tenacity>=8.2.0
+fake-useragent>=1.4.0
+
+# CLI
+click>=8.1.0
+
+# Environment
+python-dotenv>=1.0.0

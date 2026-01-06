@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en-US" prefix="og: http://ogp.me/ns#">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-46820683-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-46820683-1');
+</script>
+<title>The Good Scents Company Search Page</title>
+<meta charset="UTF-8" />
+<meta name="description" content="Search for product information" />
+<link rel="canonical" href="/search.html" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="The Good Scents Company - Search for product information" />
+<meta property="og:description" content="Search for product information" />
+<meta property="og:url" content="/search.html" />
+<link rel="shortcut icon" href="images/favicon.ico" type="/image/x-icon" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" type="text/css" href="/css/srch.css" />
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/srch.js"></script>
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-46820683-1', 'auto');
+  ga('send', 'pageview');
+</script>
+<script type="text/javascript">
+$(document).ready(function() {
+    if($( window ).width() <= "740") {
+    $('#menu-icon').click(function() {
+        $('#datanavmenu ul').toggle();
+    });
+}});
+</script>
+</head>
+<body>
+<header id="listheader">
+<div data-role="header" data-position="fixed">
+<div id="logo">TGSC Information System
+<nav id="datanavmenu" class="navsmall">
+<a href="#" id="menu-icon"></a>
+<ul>
+<a href="/index.html"><li>Home</li></a>
+<a href="/misc/about.html"><li>About</li></a>
+<a href="/misc/associations.html"><li>Associations</li></a>
+<a href="/misc/contact.html"><li>Contact</li></a>
+<a href="/categories.html"><li>Categories</li></a>
+<a href="/supply.html"><li>Supplies</li></a>
+<a href="/search.html"><li>Search</li></a>
+</ul>
+</nav>
+</div>
+</div>
+<div class="bottonspace"><span><button class="button-outer" onclick="location.href='#tothebottom';">B</button></span><span><button class="button-inner" onclick="scrollWinDown();">Down</button></span><span><button class="button-inner" onclick="scrollWinUp();">Up</button></span><span><button class="button-outer" onclick="scrollWinTop();">T</button></span></div>
+</header>
+<span id="tothetop"></span>
+<section id="listsection">
+<caption><h1>Search Information</h1></caption>
+<div class="searchstyle">
+<div class="space-top">
+<form name="form" method="POST" action="search.php">
+Name, CAS, EINECS, FEMA, FLAVIS:&nbsp;
+<br/>
+<input type="text" name="qName" />
+<input type="Image" name="submit" alt="Search" src="images/search.png" />
+</form>
+<br/>
+<form name="form" method="POST" action="search.php">
+JECFA:&nbsp;
+<br/>
+<input type="text" name="qjecfa" />
+<input type="Image" name="submit" alt="Search" src="images/search.png" />
+</form>
+<br/>
+<form name="form" method="POST" action="search.php">
+Odor (Odour):&nbsp;
+<br/>
+<input type="text" name="qOdor" />
+<input type="Image" name="submit" alt="Search" src="images/search.png" />
+</form>
+<br/>
+<form name="form" method="POST" action="search.php">
+Flavor (Flavour):&nbsp;
+<br/>
+<input type="text" name="qFlavor" />
+<input type="Image" name="submit" alt="Search" src="images/search.png" />
+</form>
+<br/>
+<form name="form" method="POST" action="search.php">
+Name within name:&nbsp;
+<br/>
+<input type="text" name="qNameNn" />
+<input type="Image" name="submit" alt="Search" src="images/search.png" />
+</form>
+</div>
+</div>
+<table id="tableList1">
+<tbody>
+<tr><td colspan="4">Please enter a search...</td></tr>
+</tbody>
+</table>

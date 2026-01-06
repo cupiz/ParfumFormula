@@ -1,0 +1,403 @@
+# Extended Fragrance Ingredients List - 300+ Items
+# For batch enrichment with ParfumVault Automation
+# Usage: python ingestor.py --target batch --file /app/data/ingredients.txt
+
+# ============================================================================
+# ESSENTIAL OILS - CITRUS (25)
+# ============================================================================
+Bergamot
+Bergamot FCF
+Lemon
+Lemon petitgrain
+Lime distilled
+Lime expressed
+Orange sweet
+Orange bitter
+Grapefruit white
+Grapefruit pink
+Mandarin green
+Mandarin red
+Tangerine
+Clementine
+Blood orange
+Yuzu
+Neroli
+Petitgrain bigarade
+Petitgrain lemon
+Petitgrain mandarin
+Combava petitgrain
+Citron
+Pomelo
+Kumquat
+Buddha's hand
+
+# ============================================================================
+# ESSENTIAL OILS - FLORAL (30)
+# ============================================================================
+Rose absolute
+Rose otto
+Rose centifolia
+Rose damascena
+Jasmine absolute
+Jasmine sambac
+Jasmine grandiflorum
+Ylang ylang extra
+Ylang ylang complete
+Cananga
+Neroli
+Orange blossom absolute
+Tuberose absolute
+Champaca absolute
+Magnolia flower
+Violet leaf absolute
+Orris butter
+Orris concrete
+Osmanthus absolute
+Frangipani
+Mimosa absolute
+Boronia absolute
+Carnation absolute
+Hyacinth absolute
+Narcissus absolute
+Lily of the valley
+Gardenia
+Lotus absolute
+Honeysuckle
+Lilac
+
+# ============================================================================
+# ESSENTIAL OILS - WOODY (25)
+# ============================================================================
+Sandalwood East Indian
+Sandalwood Australian
+Sandalwood New Caledonian
+Cedarwood Virginia
+Cedarwood Texas
+Cedarwood Atlas
+Cedarwood Himalayan
+Vetiver Haiti
+Vetiver Java
+Vetiver bourbon
+Patchouli dark
+Patchouli light
+Guaiacwood
+Oud
+Agarwood
+Rosewood
+Ho wood
+Cypress
+Hinoki
+Juniper berry
+Pine needle
+Fir balsam
+Spruce
+Hemlock
+Birch tar
+
+# ============================================================================
+# ESSENTIAL OILS - SPICY (20)
+# ============================================================================
+Cinnamon bark
+Cinnamon leaf
+Clove bud
+Clove leaf
+Clove stem
+Cardamom
+Black pepper
+Pink pepper
+Sichuan pepper
+Long pepper
+Ginger
+Galangal
+Nutmeg
+Mace
+Star anise
+Fennel
+Cumin
+Coriander seed
+Caraway
+Allspice
+
+# ============================================================================
+# ESSENTIAL OILS - HERBAL/AROMATIC (25)
+# ============================================================================
+Lavender fine
+Lavender spike
+Lavandin grosso
+Lavandin super
+Rosemary cineole
+Rosemary camphor
+Rosemary verbenone
+Basil sweet
+Basil holy
+Thyme red
+Thyme white
+Oregano
+Marjoram sweet
+Sage clary
+Sage dalmatian
+Eucalyptus globulus
+Eucalyptus radiata
+Eucalyptus citriodora
+Peppermint
+Spearmint
+Wintergreen
+Tea tree
+Cajeput
+Niaouli
+Bay laurel
+
+# ============================================================================
+# ESSENTIAL OILS - BALSAMIC/RESINOUS (20)
+# ============================================================================
+Frankincense
+Frankincense carterii
+Frankincense serrata
+Myrrh
+Opoponax
+Benzoin Siam
+Benzoin Sumatra
+Labdanum absolute
+Labdanum resinoid
+Styrax
+Tolu balsam
+Peru balsam
+Copaiba balsam
+Elemi
+Galbanum
+Amyris
+Olibanum
+Mastic
+Dragon's blood
+Dammar
+
+# ============================================================================
+# AROMA CHEMICALS - MUSKS (25)
+# ============================================================================
+Galaxolide
+Habanolide
+Ethylene brassylate
+Muscenone
+Helvetolide
+Ambrettolide
+Exaltolide
+Cosmone
+Musk ketone
+Musk xylene
+Tonalide
+Cashmeran
+Celestolide
+Romandolide
+Velvione
+Sylkolide
+Serenolide
+Nirvanolide
+Globalide
+Muscone
+Civetone
+Ambretolide
+Cervolide
+Cyclopentadecanolide
+Macrocyclic musk
+
+# ============================================================================
+# AROMA CHEMICALS - WOODS/AMBERS (30)
+# ============================================================================
+Iso E Super
+Ambroxan
+Ambrarome
+Ambermax
+Ambrocenide
+Cedramber
+Georgywood
+Javanol
+Sandalore
+Bacdanol
+Polysantol
+Vertofix
+Timberol
+Norlimbanol
+Firsantol
+Sandenol
+Ebanol
+Dartanol
+Kohinool
+Brahmswood
+Cashwood
+Okoumal
+Koavone
+Norlimbanol
+Isobornyl cyclohexanol
+Methyl cedryl ketone
+Cedrenyl acetate
+Cedroxyde
+Palisander
+Clearwood
+
+# ============================================================================
+# AROMA CHEMICALS - FLORALS (35)
+# ============================================================================
+Hedione
+Hedione HC
+Paradisone
+Linalool
+Linalyl acetate
+Geraniol
+Geranyl acetate
+Citronellol
+Citronellyl acetate
+Nerol
+Neryl acetate
+Phenylethyl alcohol
+Phenylethyl acetate
+Hydroxycitronellal
+Lilial
+Lyral
+Floralozone
+Mayol
+Bourgeonal
+Cyclamen aldehyde
+Florhydral
+Majantol
+Muguet base
+Rosalva
+Rosal
+Dihydromyrcenol
+Rose oxide
+Damascone alpha
+Damascone beta
+Damascenone
+Dynascone
+Irone alpha
+Methyl ionone
+Alpha-isomethyl ionone
+Ionone beta
+
+# ============================================================================
+# AROMA CHEMICALS - FRESH/OZONIC (15)
+# ============================================================================
+Calone
+Helional
+Floralozone
+Ozonal
+Maritima
+Cascalone
+Scentenal
+Aquaflora
+Seawater
+Ozone accord
+Melon accord
+Watermelon ketone
+Melonal
+Cucumber aldehyde
+Adoxal
+
+# ============================================================================
+# AROMA CHEMICALS - ALDEHYDES (15)
+# ============================================================================
+Aldehyde C-8
+Aldehyde C-9
+Aldehyde C-10
+Aldehyde C-11
+Aldehyde C-12
+Aldehyde C-12 MNA
+Aldehyde C-14
+Aldehyde C-16
+Aldehyde C-18
+Triplal
+Ligustral
+Citral
+Citronellal
+Hydroxycitronellal
+Anisaldehyde
+
+# ============================================================================
+# AROMA CHEMICALS - GOURMAND (20)
+# ============================================================================
+Vanillin
+Ethyl vanillin
+Heliotropin
+Coumarin
+Maltol
+Ethyl maltol
+Furaneol
+Caramel furanone
+Maple lactone
+Coconut lactone
+Methyl laitone
+Tonka bean absolute
+Coffee absolute
+Cacao absolute
+Chocolate accord
+Praline accord
+Benzaldehyde
+Anisaldehyde
+Phenylacetaldehyde
+Raspberry ketone
+
+# ============================================================================
+# AROMA CHEMICALS - FRUITY (25)
+# ============================================================================
+Gamma-decalactone
+Gamma-undecalactone
+Gamma-nonalactone
+Delta-decalactone
+Delta-undecalactone
+Jasmine lactone
+Tuberose lactone
+Aldehyde C-14
+Nectaryl
+Frutonile
+Prunolide
+Apritone
+Cassis base
+Blackcurrant bud absolute
+Peach aldehyde
+Apricot aldehyde
+Plum aldehyde
+Mango lactone
+Passion fruit compound
+Lychee compound
+Pear ester
+Apple ester
+Banana isoamyl
+Strawberry furanone
+Fig leaf
+
+# ============================================================================
+# AROMA CHEMICALS - GREEN/HERBAL (15)
+# ============================================================================
+Cis-3-hexenol
+Trans-2-hexenol
+Cis-3-hexenyl acetate
+Cis-3-hexenyl salicylate
+Galbanum
+Violet leaf absolute
+Stemone
+Triplal
+Ligustral
+Nonadienal
+Cucumber aldehyde
+Green leaf accord
+Basil methyl chavicol
+Tarragon
+Artemisia
+
+# ============================================================================
+# CARRIERS & SOLVENTS (15)
+# ============================================================================
+Dipropylene glycol
+Isopropyl myristate
+Fractionated coconut oil
+Jojoba oil
+Ethanol
+Benzyl benzoate
+Diethyl phthalate
+Triethyl citrate
+IPM
+MCT oil
+Propylene glycol
+Glycerin
+Caprylic triglyceride
+Squalane
+Perfumer's alcohol

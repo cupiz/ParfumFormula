@@ -1,0 +1,51 @@
+# ParfumVault Docker Compose Override
+# Adds the Python automation service to the existing stack
+#
+# Usage:
+#   docker compose -f docker-compose/compose.yaml -f docker-compose.override.yml up -d
+#   docker compose -f docker-compose/compose.yaml -f docker-compose.override.yml run automation python ingestor.py --help
+
+services:
+  # Automation service for data enrichment
+  automation:
+    build:
+      context: ./automation
+      dockerfile: Dockerfile
+
+    depends_on:
+      pvdb:
+        condition: service_started
+
+    environment:
+      # Database connection (same as pvault service)
+      DB_HOST: pvdb
+      DB_PORT: "3306"
+      DB_USER: pvault
+      DB_PASS: pvault
+      DB_NAME: pvault
+
+      # Automation settings
+      OWNER_ID: "1" # Default owner for auto-inserted records
+      SCRAPER_DELAY: "2" # Seconds between scraper requests
+      LOG_LEVEL: INFO # DEBUG/INFO/WARNING/ERROR
+      DATA_DIR: /app/data # Data/cache directory
+
+      # Scraper settings
+      USER_AGENT_ROTATION: "true"
+      CACHE_ENABLED: "true"
+      CACHE_TTL_HOURS: "24"
+
+    volumes:
+      # Persist data/cache between runs
+      - ./automation/data:/app/data
+
+    # Don't restart automatically (run on-demand)
+    restart: "no"
+
+    # Connect to the same network as the database
+    networks:
+      - default
+    # Keep container running for interactive use (optional)
+    # Uncomment the following to keep the container alive:
+    # stdin_open: true
+    # tty: true
