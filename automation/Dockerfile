@@ -52,13 +52,18 @@ ENV PYTHONUNBUFFERED=1 \
     DB_PASS=pvault \
     DB_NAME=pvault \
     OWNER_ID=1 \
-    SCRAPER_DELAY=2 \
+    SCRAPER_DELAY=10 \
     LOG_LEVEL=INFO \
-    DATA_DIR=/app/data
+    DATA_DIR=/app/data \
+    API_PORT=5001 \
+    FLASK_DEBUG=false
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "from db_adapter import get_db; exit(0 if get_db().test_connection() else 1)"
+# Expose API port
+EXPOSE 5001
 
-# Default command shows help
-CMD ["python", "ingestor.py", "--help"]
+# Health check via API endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import requests; exit(0 if requests.get('http://localhost:5001/health').status_code == 200 else 1)"
+
+# Run API server by default (use gunicorn for production)
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "2", "--timeout", "120", "api_server:app"]

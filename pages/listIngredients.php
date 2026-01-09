@@ -146,7 +146,7 @@ $(document).ready(function() {
 		language: {
 			loadingRecords: '&nbsp;',
 			processing: 'Blending...',
-			zeroRecords: '<div class="alert alert-warning mt-2"><i class="fa-solid fa-triangle-exclamation mx-2"></i><strong>Nothing found, try <a href="#" data-bs-toggle="modal" data-bs-target="#adv_search">advanced</a> search instead?</strong></div>',
+			zeroRecords: AutoSearch.getZeroRecordsHtml(),
 			search: 'Quick Search:',
 			searchPlaceholder: 'Name, CAS, EINECS, IUPAC...',
 		},
@@ -741,6 +741,14 @@ $(document).ready(function() {
 		});
 	});
 
+});
+</script>
+<script src="/js/autosearch.js"></script>
+<script>
+// Initialize AutoSearch after DataTable is ready
+$(document).ready(function() {
+	var table = $('#tdDataIng').DataTable();
+	AutoSearch.init(table);
 });
 </script>
 <script src="/js/import.ingredients.js"></script>

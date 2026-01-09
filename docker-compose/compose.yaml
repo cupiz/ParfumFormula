@@ -14,11 +14,15 @@ services:
       MARIADB_AUTO_UPGRADE: true
     expose:
       - 3306
+
   pvault:
     image: jbparfum/perfumersvault:latest
     ports:
       - 8000:8000
     restart: always
+    depends_on:
+      - pvdb
+      - automation
     environment:
       PLATFORM: CLOUD
       DB_HOST: pvdb
@@ -29,6 +33,31 @@ services:
       TMP_PATH: /tmp/
       FILE_EXT: 'pdf, doc, docx, xls, csv, xlsx, png, jpg, jpeg, gif'
       DB_BACKUP_PARAMETERS: '--column-statistics=1'
+      # Automation API for ingredient auto-search
+      AUTOMATION_API_URL: 'http://automation:5001'
+
+  automation:
+    build:
+      context: ../automation
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - pvdb
+    environment:
+      DB_HOST: pvdb
+      DB_PORT: 3306
+      DB_USER: pvault
+      DB_PASS: pvault
+      DB_NAME: pvault
+      SCRAPER_DELAY: 10
+      LOG_LEVEL: INFO
+    expose:
+      - 5001
+    # Optional: expose for debugging
+    # ports:
+    #   - 5001:5001
 
 volumes:
   db_data:
+
+
