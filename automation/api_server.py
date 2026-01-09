@@ -11,8 +11,7 @@ from flask_cors import CORS
 
 # Import local modules
 from config import get_config, setup_logging
-from scraper import get_scraper
-from models import IngredientProfile, PubChemData
+from scraper import get_scraper, IngredientProfile, PubChemData
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for PHP frontend
