@@ -1,7 +1,7 @@
 # 🧪 ParfumFormula
 >
 > **The Advanced Formulation & Regulatory Platform**  
-> *A feature-enhanced fork of [jbparfum/parfumvault](https://github.com/jbparfum/parfumvault)*
+> *A robust, feature-enhanced fork of [jbparfum/parfumvault](https://github.com/jbparfum/parfumvault)*
 
 ![Version](https://img.shields.io/badge/version-2.6.0--mod-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-green.svg)
@@ -17,41 +17,28 @@
 
 We have supercharged the core Perfumers Vault with a custom **Automation Suite** (`/automation`) designed to eliminate manual data entry:
 
-### 🚀 1. Intelligent Ingredient Scraper
+### 🚀 1. Auto-Search Online (New Feature!)
 
-Stop manually typing CAS numbers and odor descriptions. Our Python-based scraper automatically enriches your database:
+**Can't find an ingredient?** No problem!
+We have integrated a seamless connection to **PubChem** and **The Good Scents Company (TGSC)** directly into the user interface.
 
-* **Multi-Source Mining:** Fetches data from **PubChem** (Chemical properties, IUPAC names) and **The Good Scents Company** (Odor profiles, FEMA numbers).
-* **Smart Matching:** Uses advanced fuzzy matching and CAS verification to ensure accuracy.
-* **Rate-Limit Complaint:** Built-in safeguards to respect API limits (delayed requests, user-agent rotation).
+* **Permanently Available:** A yellow **"Search Online"** button is always accessible on the Ingredients page.
+* **Smart Search:** Searches 100M+ compounds instantly via our Python automation backend.
+* **Instant Import:** Preview chemical data (CAS, Formula, Odor Profile) and add it to your library with **one click**.
+* **Zero Configuration:** Works out-of-the-box using an internal secure bridge (`ajax_autosearch.php`)—no complex API keys required.
 
-### 📋 2. One-Click IFRA Sync
+### 📋 2. Intelligent Ingredient Scraper
 
-Stay compliant effortlessly. The automation module synchronizes your database with the **IFRA Standards (51st Amendment)**:
+Stop manually typing CAS numbers and odor descriptions. Our background Python scraper automatically enriches your database:
 
-* **Automatic Limits:** Populates restriction limits (Cat 1 - Cat 12) for hundreds of restricted materials.
-* **Risk Analysis:** Flags prohibited ingredients (e.g., Lilial, Lyral) and those with specific warnings (Phototoxicity).
+* **Multi-Source Mining:** Fetches data from authoritative sources.
+* **Smart Matching:** Uses advanced fuzzy matching algorithms.
+* **Resilient:** Automatically handles rate limits and connection issues.
 
-### 📦 3. Batch Population
+### 📦 3. One-Click IFRA Sync & Batch Population
 
-Your vault comes pre-loaded with a curated list of **300+ Industry-Standard Ingredients**:
-
-* Oraganized by family (Citrus, Floral, Woody, Musk, etc.)
-* Ready to ingest with a single command.
-
-### 🔍 4. Auto-Search Online (NEW!)
-
-**Can't find an ingredient?** No problem! When you search for an ingredient that doesn't exist in your local database:
-
-* A **"Search Online"** button appears automatically
-* Click it to search **100M+ compounds** from PubChem & TGSC
-* Preview the data (CAS, Formula, Odor Profile, FEMA number)
-* One-click **"Add to Library"** saves it directly to your database
-
-```
-User searches "Hedione" → Not found locally → Click "Search Online" 
-→ API fetches from PubChem & TGSC → Preview shown → Add to Library ✓
-```
+* **IFRA 51st Amendment:** Automatically syncs restriction limits (Cat 1 - Cat 12) for hundreds of materials.
+* **Pre-Loaded Library:** Capable of ingesting a curated list of 300+ industry-standard ingredients in one go.
 
 ---
 
@@ -68,12 +55,12 @@ ParfumFormula enables the full lifecycle of fragrance creation:
 
 ---
 
-## 🛠️ Installation & Setup
+## 🛠️ Installation & Setup (WSL / Docker)
 
 ### Prerequisites
 
 * [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows/Mac/Linux)
-* **Windows Subsystem for Linux (WSL 2)** (Recommended for Windows users)
+* **Windows Subsystem for Linux (WSL 2)** (Highly Recommended for Windows users)
 
 ### Quick Start (Docker Compose)
 
@@ -86,27 +73,32 @@ ParfumFormula enables the full lifecycle of fragrance creation:
 
 2. **Start the Platform**
 
+    We use a custom port configuration to avoid conflicts with local services.
+
     ```bash
-    docker-compose up -d
+    # Run from the project root
+    docker compose -f docker-compose/compose.yaml up -d --build
     ```
 
     This will launch:
-    * `pvdb`: MariaDB database container
-    * `pvault`: The web application container
+    * `pvdb`: MariaDB database container (Internal Port 3306)
+    * `pvault`: The web application container (Host Port **8082**)
+    * `automation`: Python API service (Internal Port 5001)
 
 3. **Access the App**
+
     Open your browser and navigate to:  
-    👉 **<http://localhost:8000>**
+    👉 **[http://localhost:8082](http://localhost:8082)**
 
     *Default Credentials:*
-    * **Email:** `admin@example.com`
+    * **Email:** `admin@admin.com`
     * **Password:** `password`
 
 ---
 
-## 🤖 Using the Automation Module
+## 🤖 Using the Automation Module (CLI)
 
-To populate your empty database with real-world data, use our CLI tools.
+To manually populate your database with bulk data:
 
 ### 1. Enter the Environment
 
@@ -134,6 +126,34 @@ python ingestor.py --target batch --file ./data/ingredients.txt
 ```
 
 *> Note: This process takes time due to respect for API rate limits. Runs best in background.*
+
+---
+
+---
+
+## ❓ Troubleshooting
+
+### "Search Online" Button Missing
+
+If you don't see the yellow button in the Ingredients toolbar:
+
+1. **Force Refresh** your browser (Ctrl+F5) to clear the cache.
+2. Ensure you are accessing the correct port: `http://localhost:8082`.
+
+### Search Returns "Empty Data"
+
+If the search finds the ingredient (name/CAS) but returns no other data:
+
+1. The scraper might be blocked by rate limits.
+2. Check the automation logs: `docker compose logs automation`.
+3. Retry the search after 1 minute.
+
+### Port Conflicts
+
+If you cannot access the app:
+
+* Error `bind: address already in use`: Stop other services on port **8082** or **3306**.
+* Edit `docker-compose/compose.yaml` to change the port mapping if needed.
 
 ---
 

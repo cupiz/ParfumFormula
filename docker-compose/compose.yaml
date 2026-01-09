@@ -18,11 +18,17 @@ services:
   pvault:
     image: jbparfum/perfumersvault:latest
     ports:
-      - 8000:8000
+      - 8082:8000
     restart: always
     depends_on:
       - pvdb
       - automation
+    volumes:
+      # Mount FULL DIRECTORIES to correct /html web root
+      # This replaces the container's directory content with host's content
+      - /mnt/d/Project/Parfum/js:/html/js
+      - /mnt/d/Project/Parfum/api-functions:/html/api-functions
+      - /mnt/d/Project/Parfum/pages:/html/pages
     environment:
       PLATFORM: CLOUD
       DB_HOST: pvdb
@@ -51,13 +57,10 @@ services:
       DB_NAME: pvault
       SCRAPER_DELAY: 10
       LOG_LEVEL: INFO
+    volumes:
+      - /mnt/d/Project/Parfum/automation/data:/app/data
     expose:
       - 5001
-    # Optional: expose for debugging
-    # ports:
-    #   - 5001:5001
 
 volumes:
   db_data:
-
-

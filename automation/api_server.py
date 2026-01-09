@@ -111,7 +111,19 @@ def merge_ingredient_data(
         "odor_family": None,
         "fema": None,
         "synonyms": [],
-        "sources": []
+        "sources": [],
+        # Extended fields from TGSC
+        "physical_state": None,  # Derived from appearance
+        "flash_point": None,
+        "odor_strength": None,
+        "appearance": None,
+        "solubility": None,
+        "tenacity": None,
+        "logp": None,
+        "shelf_life": None,
+        "einecs": None,
+        "reach": None,
+        "notes": None           # General notes
     }
     
     # Merge TGSC data
@@ -127,6 +139,32 @@ def merge_ingredient_data(
             result["formula"] = tgsc.molecular_formula
         if tgsc.molecular_weight:
             result["molecular_weight"] = tgsc.molecular_weight
+        if tgsc.flash_point:
+            result["flash_point"] = tgsc.flash_point
+        if tgsc.tenacity:
+            result["tenacity"] = tgsc.tenacity
+        if tgsc.logp:
+            result["logp"] = tgsc.logp
+        if tgsc.soluble:
+            result["solubility"] = tgsc.soluble
+        if tgsc.shelf_life:
+            result["shelf_life"] = tgsc.shelf_life
+        if tgsc.einecs:
+            result["einecs"] = tgsc.einecs
+        if tgsc.reach:
+            result["reach"] = tgsc.reach
+            
+        if tgsc.appearance:
+            result["appearance"] = tgsc.appearance
+            # Simple heuristic for state
+            if "solid" in tgsc.appearance.lower() or "crystal" in tgsc.appearance.lower() or "powder" in tgsc.appearance.lower():
+                result["physical_state"] = 2 # Solid
+            elif "liquid" in tgsc.appearance.lower() or "oil" in tgsc.appearance.lower():
+                result["physical_state"] = 1 # Liquid
+        if tgsc.odor_strength:
+            result["odor_strength"] = tgsc.odor_strength
+            
+            
         # Check for FEMA in uses
         for use in tgsc.uses:
             if use.startswith("FEMA"):

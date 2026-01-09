@@ -49,7 +49,16 @@ class IngredientProfile:
     specific_gravity: Optional[str] = None
     boiling_point: Optional[str] = None
     molecular_formula: Optional[str] = None
+    molecular_formula: Optional[str] = None
     molecular_weight: Optional[str] = None
+    # New fields
+    tenacity: Optional[str] = None
+    logp: Optional[str] = None
+    soluble: Optional[str] = None
+    shelf_life: Optional[str] = None
+    einecs: Optional[str] = None
+    reach: Optional[str] = None
+    
     synonyms: list[str] = field(default_factory=list)
     uses: list[str] = field(default_factory=list)
     source: str = "unknown"
@@ -106,6 +115,8 @@ class TGSCSelectors:
     LABEL_PATTERNS = {
         "cas": ["cas number", "cas", "cas#", "cas no"],
         "fema": ["fema", "fema no", "fema number"],
+        "einecs": ["einecs", "einecs#", "ec number"],
+        "reach": ["reach", "reach reg", "reach registration"],
         "odor": ["odor description", "odor", "aroma", "smell"],
         "odor_type": ["odor type", "odor family", "family", "note"],
         "flavor": ["flavor description", "flavor", "taste"],
@@ -117,6 +128,11 @@ class TGSCSelectors:
         "molecular_formula": ["molecular formula", "formula", "mol formula"],
         "molecular_weight": ["molecular weight", "mol weight", "mw"],
         "synonyms": ["synonyms", "other names", "alternate names"],
+        # New Enriched Fields
+        "tenacity": ["substantivity", "tenacity", "lasting"],
+        "logp": ["logp", "log p", "octanol water"],
+        "soluble": ["soluble in", "solubility"],
+        "shelf_life": ["shelf life", "shelf-life", "storage"],
     }
 
 
@@ -494,170 +510,306 @@ class FragranceScraper:
     def search_tgsc(self, name: str) -> Optional[IngredientProfile]:
         """
         Search The Good Scents Company for ingredient data.
-        
-        Uses the search.php endpoint which returns HTML with ingredient tables.
-        Verified working as of 2026-01-07.
-        
-        Args:
-            name: Ingredient name to search for
-        
-        Returns:
-            IngredientProfile or None if not found
+        Now uses DuckDuckGo to find the direct page, bypassing the broken search form.
         """
-        self.logger.info(f"Searching TGSC for: {name}")
-        
+        # Strategy 1: Direct TGSC Search (Most Reliable)
         try:
-            self._rate_limit()
+            self.logger.info(f"Searching TGSC directly: {name}")
+            search_url = TGSCSelectors.SEARCH_URL
+            data = {"qName": name, "submit": "Search"}
             
-            # TGSC uses form POST to search.php
+            # Use session to maintain cookies/headers
             headers = {
                 "User-Agent": self._get_user_agent(),
-                "Accept": "text/html,application/xhtml+xml",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Content-Type": "application/x-www-form-urlencoded",
                 "Referer": TGSCSelectors.SEARCH_PAGE,
+                "Origin": TGSCSelectors.BASE_URL,
+                "Content-Type": "application/x-www-form-urlencoded"
             }
             
-            # Form data for search - field is 'qName' based on actual form
-            form_data = {
-                "qName": name,
-            }
-            
-            self.logger.debug(f"Posting to TGSC search: {name}")
-            
+            self._rate_limit()
             response = self.session.post(
-                TGSCSelectors.SEARCH_URL,
-                data=form_data,
+                search_url, 
+                data=data, 
                 headers=headers,
-                timeout=self.config.scraper.timeout_seconds,
+                timeout=self.config.scraper.timeout_seconds
             )
-            response.raise_for_status()
             
-            soup = BeautifulSoup(response.text, "lxml")
-            
-            # Parse the results page
-            profile = self._parse_tgsc_page(soup, name)
-            
-            if profile:
-                profile.source = "TGSC"
-                self.logger.info(f"Found TGSC data for '{name}'")
+            if response.status_code == 200:
+                # Parse search results
+                soup = BeautifulSoup(response.text, "html.parser")
+                links = soup.find_all("a", href=True)
+                
+                tgsc_url = None
+                for link in links:
+                    href = link.get("href", "")
+                    if "data/rw" in href:
+                        tgsc_url = href
+                        break
+                
+                # Fallback: Regex search if soup fails (e.g. link in JS or malformed HTML)
+                if not tgsc_url:
+                    import re
+                    # Look for pattern data/rw followed by digits
+                    match = re.search(r'data/rw\d+\.html', response.text)
+                    if match:
+                        tgsc_url = match.group(0)
+                        self.logger.info(f"Found TGSC URL via Regex: {tgsc_url}")
+
+                if tgsc_url:
+                    self.logger.info("Normalizing TGSC URL...")
+                    # Normalize URL
+                    if not tgsc_url.startswith("http"):
+                        if tgsc_url.startswith("/"):
+                            tgsc_url = TGSCSelectors.BASE_URL + tgsc_url
+                        else:
+                            tgsc_url = TGSCSelectors.BASE_URL + "/" + tgsc_url
+                            
+                    self.logger.info(f"Found TGSC URL (Direct): {tgsc_url}")
+                    result = self._fetch_and_parse_tgsc(tgsc_url, name)
+                    if result:
+                         self.logger.info("Direct Search Returns VALID Result")
+                         return result
+                    else:
+                         self.logger.warning("Direct Search fetched page but returned None (Parsing failed?)")
+                else:
+                    self.logger.warning(f"No data link found in TGSC Direct Search response (Length: {len(response.text)})")
             else:
-                self.logger.debug(f"No TGSC data found for '{name}'")
-            
-            return profile
-            
-        except requests.RequestException as e:
-            self.logger.warning(f"TGSC request failed for '{name}': {e}")
-            return None
+                 self.logger.warning(f"TGSC Direct Search returned {response.status_code}")
+                 
         except Exception as e:
-            self.logger.warning(f"TGSC parsing error for '{name}': {e}")
+            import traceback
+            self.logger.error(f"TGSC Direct Search CRASHED: {e}")
+            self.logger.error(traceback.format_exc())
 
+        # Strategy 2: DuckDuckGo Search
+        try:
+            from duckduckgo_search import DDGS
+            self.logger.info(f"Searching TGSC via DuckDuckGo: {name}")
+            
+            # Use 'lite' backend as it's often more lenient
+            results = DDGS().text(f"site:thegoodscentscompany.com {name} ingredient", max_results=3, backend="lite")
+            
+            if results:
+                for r in results:
+                    href = r.get("href", "")
+                    if "thegoodscentscompany.com/data/rw" in href:
+                        self.logger.info(f"Found TGSC URL (DDG): {href}")
+                        return self._fetch_and_parse_tgsc(href, name)
+        except Exception as e:
+            self.logger.warning(f"DuckDuckGo search failed: {e}")
 
+        # Strategy 3: Google Search (googlesearch-python)
+        try:
+            from googlesearch import search
+            self.logger.info(f"Searching TGSC via Google: {name}")
+            
+            # search() yields URLs
+            results = search(f"site:thegoodscentscompany.com {name} ingredient", num_results=3, advanced=True)
+            for res in results:
+                # res might be a string or object depending on version
+                url = res.url if hasattr(res, 'url') else res
+                if "thegoodscentscompany.com/data/rw" in url:
+                    self.logger.info(f"Found TGSC URL (Google): {url}")
+                    return self._fetch_and_parse_tgsc(url, name)
+        except Exception as e:
+            self.logger.warning(f"Google search failed: {e}")
+            
+        self.logger.warning(f"All TGSC search methods failed for: {name}")
+        return None
+
+    def _fetch_and_parse_tgsc(self, url: str, name: str) -> Optional[IngredientProfile]:
+        """Helper to fetch and parse a TGSC page."""
+        response = self._fetch(url)
+        if response.status_code != 200:
+            self.logger.warning(f"Failed to fetch TGSC page: {response.status_code}")
+            return None
+        return self._parse_tgsc_page(response.text, name)
     
     def _parse_tgsc_page(
         self, 
-        soup: BeautifulSoup, 
+        page_content: str, 
         name: str
     ) -> Optional[IngredientProfile]:
         """
         Parse TGSC search results page for ingredient data.
-        
-        TGSC search returns results in a specific format with:
-        - CAS number
-        - FEMA number
-        - Odor description
-        - Flavor description
-        
-        Update selectors here if the website structure changes.
         """
-        profile = IngredientProfile(name=name)
-        page_text = soup.get_text()
-        
-        # Extract CAS number - first match in page
-        cas_matches = re.findall(TGSCSelectors.CAS_PATTERN, page_text)
-        if cas_matches:
-            profile.cas = cas_matches[0]
-        
-        # Extract FEMA number pattern
-        fema_match = re.search(r'FEMA[:\s#]*(\d{4})', page_text, re.IGNORECASE)
-        if fema_match:
-            # Store in uses field for now
-            profile.uses.append(f"FEMA {fema_match.group(1)}")
-        
-        # Extract odor description from text patterns
-        # TGSC format: "odor: citrus floral sweet woody"
-        odor_pattern = r'odor[:\s]+([a-zA-Z\s,]+?)(?:flavor|$|\n|\r|<)'
-        odor_match = re.search(odor_pattern, page_text, re.IGNORECASE)
-        if odor_match:
-            odor_text = odor_match.group(1).strip()
-            # Clean up the odor description
-            odor_text = re.sub(r'\s+', ' ', odor_text)
-            if len(odor_text) > 3:
-                profile.odor_description = odor_text
-        
-        # Extract flavor description
-        flavor_pattern = r'flavor[:\s]+([a-zA-Z\s,]+?)(?:odor|$|\n|\r|<)'
-        flavor_match = re.search(flavor_pattern, page_text, re.IGNORECASE)
-        if flavor_match:
-            flavor_text = flavor_match.group(1).strip()
-            flavor_text = re.sub(r'\s+', ' ', flavor_text)
-            if len(flavor_text) > 3:
-                profile.uses.append(f"Flavor: {flavor_text}")
-        
-        # Look for data in tables (fallback method)
-        tables = soup.find_all("table")
-        for table in tables:
-            rows = table.find_all("tr")
-            for row in rows:
-                cells = row.find_all(["td", "th"])
-                if len(cells) >= 2:
-                    label = cells[0].get_text(strip=True).lower()
-                    value = cells[1].get_text(strip=True)
-                    
-                    # Map common labels to fields
-                    if any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["cas"]):
-                        cas_match = re.search(TGSCSelectors.CAS_PATTERN, value)
-                        if cas_match:
-                            profile.cas = cas_match.group(1)
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["odor"]):
-                        if not profile.odor_description:
-                            profile.odor_description = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["odor_type"]):
-                        profile.odor_family = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["strength"]):
-                        profile.odor_strength = self._normalize_strength(value)
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["appearance"]):
-                        profile.appearance = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["flash_point"]):
-                        profile.flash_point = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["specific_gravity"]):
-                        profile.specific_gravity = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["boiling_point"]):
-                        profile.boiling_point = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["molecular_formula"]):
-                        profile.molecular_formula = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["molecular_weight"]):
-                        profile.molecular_weight = value
-                    
-                    elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["synonyms"]):
-                        synonyms = [s.strip() for s in value.split(",")]
-                        profile.synonyms.extend(synonyms)
-        
-        # Check if we found any useful data
-        if profile.cas or profile.odor_description or profile.odor_family:
-            return profile
-
-        
-        return None
+        self.logger.info(f"Parsing TGSC page for '{name}' (Length: {len(page_content)})")
+        try:
+            soup = BeautifulSoup(page_content, "html.parser")
+            profile = IngredientProfile(name=name)
+            
+            # Extract table data
+            tables = soup.find_all("table")
+            page_text = soup.get_text()
+            self.logger.info(f"Found {len(tables)} tables")
+            for table in tables:
+                rows = table.find_all("tr")
+                for row in rows:
+                    cells = row.find_all(["td", "th"])
+                    if len(cells) >= 2:
+                        label = cells[0].get_text(strip=True).lower()
+                        value = cells[1].get_text(strip=True)
+                        
+                        if "cas" in label and not profile.cas:
+                             # try to find cas pattern in value
+                             match = re.search(TGSCSelectors.CAS_PATTERN, value)
+                             if match:
+                                 profile.cas = match.group(1)
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["fema"]):
+                            profile.uses.append(f"FEMA {value}")
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["odor"]):
+                            if len(value) > 3:
+                                profile.odor_description = value
+                                
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["odor_type"]):
+                            if value:
+                                 profile.odor_family = value
+                                 
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["strength"]):
+                             profile.odor_strength = value
+                             
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["appearance"]):
+                             profile.appearance = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["flash_point"]):
+                             profile.flash_point = value
+                             
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["molecular_weight"]):
+                             profile.molecular_weight = value
+                             
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["molecular_formula"]):
+                             profile.molecular_formula = value
+                             
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["synonyms"]):
+                            synonyms = [s.strip() for s in value.split(",")]
+                            profile.synonyms.extend(synonyms)
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["tenacity"]):
+                            profile.tenacity = value
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["logp"]):
+                            profile.logp = value
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["soluble"]):
+                            profile.soluble = value
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["shelf_life"]):
+                            profile.shelf_life = value
+    
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["einecs"]):
+                            profile.einecs = value
+    
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["reach"]):
+                            profile.reach = value
+            
+            # Fallback to text parsing if tables failed (old logic)
+            if not profile.cas:
+                # Extract CAS number - first match in page
+                cas_matches = re.findall(TGSCSelectors.CAS_PATTERN, page_text)
+                if cas_matches:
+                    profile.cas = cas_matches[0]
+            
+            if not profile.odor_description:
+                # Extract odor description from text patterns
+                # TGSC format: "odor: citrus floral sweet woody"
+                odor_pattern = r'odor[:\s]+([a-zA-Z\s,]+?)(?:flavor|$|\n|\r|<)'
+                # ... (rest of regex logic is fine if needed, but table is preferred)
+                odor_match = re.search(odor_pattern, page_text, re.IGNORECASE)
+                if odor_match:
+                    odor_text = odor_match.group(1).strip()
+                    # Clean up the odor description
+                    odor_text = re.sub(r'\s+', ' ', odor_text)
+                    if len(odor_text) > 3:
+                        profile.odor_description = odor_text
+            
+            # Extract flavor description
+            flavor_pattern = r'flavor[:\s]+([a-zA-Z\s,]+?)(?:odor|$|\n|\r|<)'
+            flavor_match = re.search(flavor_pattern, page_text, re.IGNORECASE)
+            if flavor_match:
+                flavor_text = flavor_match.group(1).strip()
+                flavor_text = re.sub(r'\s+', ' ', flavor_text)
+                if len(flavor_text) > 3:
+                    profile.uses.append(f"Flavor: {flavor_text}")
+            
+            # Look for data in tables (fallback method)
+            tables = soup.find_all("table")
+            for table in tables:
+                rows = table.find_all("tr")
+                for row in rows:
+                    cells = row.find_all(["td", "th"])
+                    if len(cells) >= 2:
+                        label = cells[0].get_text(strip=True).lower()
+                        value = cells[1].get_text(strip=True)
+                        
+                        # Map common labels to fields
+                        if any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["cas"]):
+                            cas_match = re.search(TGSCSelectors.CAS_PATTERN, value)
+                            if cas_match:
+                                profile.cas = cas_match.group(1)
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["odor"]):
+                            if not profile.odor_description:
+                                profile.odor_description = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["odor_type"]):
+                            profile.odor_family = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["strength"]):
+                            profile.odor_strength = self._normalize_strength(value)
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["appearance"]):
+                            profile.appearance = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["flash_point"]):
+                            profile.flash_point = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["specific_gravity"]):
+                            profile.specific_gravity = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["boiling_point"]):
+                            profile.boiling_point = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["molecular_formula"]):
+                            profile.molecular_formula = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["molecular_weight"]):
+                            profile.molecular_weight = value
+                        
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["synonyms"]):
+                            synonyms = [s.strip() for s in value.split(",")]
+                            profile.synonyms.extend(synonyms)
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["tenacity"]):
+                            profile.tenacity = value
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["logp"]):
+                            profile.logp = value
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["soluble"]):
+                            profile.soluble = value
+                            
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["shelf_life"]):
+                            profile.shelf_life = value
+    
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["einecs"]):
+                            profile.einecs = value
+    
+                        elif any(lbl in label for lbl in TGSCSelectors.LABEL_PATTERNS["reach"]):
+                            profile.reach = value
+            
+            # Check if we found any useful data
+            if profile.cas or profile.odor_description or profile.odor_family:
+                return profile
+    
+            return None
+    
+        except Exception as e:
+            import traceback
+            self.logger.error(f"TGSC Parsing CRASHED: {e}")
+            self.logger.error(traceback.format_exc())
+            return None
     
     def _normalize_strength(self, value: str) -> str:
         """Normalize odor strength to standard values."""

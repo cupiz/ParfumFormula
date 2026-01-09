@@ -6,13 +6,15 @@ require_once(__ROOT__.'/inc/sec.php');
 require_once(__ROOT__.'/inc/opendb.php');
 require_once(__ROOT__.'/inc/settings.php');
 require_once(__ROOT__.'/func/loadModules.php');
-
+?>
+<?php
 $defCatClass = $settings['defCatClass'];
 $cIngredients = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM ingredients WHERE owner_id = '$userID'"));
 
 ?>
 <div class="col mb-4">
 	<div class="text-right">
+      <button type="button" class="btn btn-warning me-2" id="pv-autosearch-btn-static"><i class="fas fa-globe me-2"></i>Search Online</button>
      <div class="btn-group">
      	<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-bars mx-2"></i>Actions</button>
       	<div class="dropdown-menu dropdown-menu-right">
@@ -743,9 +745,192 @@ $(document).ready(function() {
 
 });
 </script>
-<script src="/js/autosearch.js"></script>
+
 <script>
-// Initialize AutoSearch after DataTable is ready
+/**
+ * INLINED AUTOSEARCH MODULE
+ * To bypass 404/Loading issues
+ */
+var AutoSearch = (function() {
+    return {
+        // Configuration
+        apiEndpoint: '/pages/ajax_autosearch.php',
+        searchTimeout: 60000, 
+        dataTable: null,
+        pendingIngredient: null,
+
+        init: function (dataTable) {
+            this.dataTable = dataTable;
+            this.bindEvents();
+            console.log("🚀 AutoSearch Inlined Initialized");
+        },
+
+        bindEvents: function () {
+            // Listen for "Search Online" button click
+            $(document).on('click', '#pv-autosearch-btn, #pv-autosearch-btn-static', (e) => {
+                e.preventDefault();
+                const searchTerm = $('#ing_search').val().trim();
+                if (searchTerm) {
+                    this.searchOnline(searchTerm);
+                } else {
+                    $('#ing_search').focus(); 
+                    // Optional: alert('Please enter a name');
+                }
+            });
+
+            // Listen for "Add to Library" button in modal
+            $(document).on('click', '#pv-autosearch-add-btn', (e) => {
+                e.preventDefault();
+                this.addToLibrary();
+            });
+        },
+
+        searchOnline: function (name) {
+            const self = this;
+            this.showLoading('Searching PubChem & TGSC for "' + name + '"...');
+
+            $.ajax({
+                url: this.apiEndpoint + '?action=search&name=' + encodeURIComponent(name),
+                method: 'GET',
+                timeout: this.searchTimeout,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success && response.ingredient) {
+                        self.showPreview(response.ingredient, response.sources);
+                    } else {
+                        self.showError(response.error || 'No data found online for this ingredient.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    if (status === 'timeout') {
+                        self.showError('Search timed out. The servers may be slow. Please try again.');
+                    } else {
+                        self.showError('Failed to connect to automation service: ' + error);
+                    }
+                }
+            });
+        },
+
+        showLoading: function (message) {
+            const modal = this.getOrCreateModal();
+            modal.find('.modal-body').html(
+                '<div class="text-center py-4">' +
+                '<div class="spinner-border text-primary mb-3" role="status"><span class="visually-hidden">Loading...</span></div>' +
+                '<p class="text-muted">' + message + '</p>' +
+                '</div>'
+            );
+            modal.find('.modal-footer').hide();
+            modal.modal('show');
+        },
+
+        showPreview: function (ingredient, sources) {
+            const modal = this.getOrCreateModal();
+            this.pendingIngredient = ingredient;
+
+            let sourceBadges = '';
+            if (sources) {
+                if (sources.tgsc) sourceBadges += '<span class="badge bg-success me-1">TGSC</span>';
+                if (sources.pubchem) sourceBadges += '<span class="badge bg-primary me-1">PubChem</span>';
+            }
+
+            const html = 
+                '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i><strong>Found!</strong> Data retrieved from: ' + sourceBadges + '</div>' +
+                '<table class="table table-sm table-bordered"><tbody>' +
+                '<tr><th style="width: 140px;">Name</th><td><strong>' + this.escapeHtml(ingredient.name) + '</strong></td></tr>' +
+                '<tr><th>CAS Number</th><td>' + (ingredient.cas || '<em class="text-muted">Not found</em>') + '</td></tr>' +
+                '<tr><th>Formula</th><td>' + (ingredient.formula || '<em class="text-muted">Not found</em>') + '</td></tr>' +
+                '<tr><th>Odor</th><td>' + (ingredient.odor_description || '<em class="text-muted">Not found</em>') + '</td></tr>' +
+                '</tbody></table>';
+
+            modal.find('.modal-body').html(html);
+            modal.find('.modal-footer').show();
+            modal.find('#pv-autosearch-add-btn').show();
+        },
+
+        showError: function (message) {
+            const modal = this.getOrCreateModal();
+            modal.find('.modal-body').html(
+                '<div class="alert alert-warning mb-0"><i class="fas fa-exclamation-triangle me-2"></i>' + this.escapeHtml(message) + '</div>'
+            );
+            modal.find('.modal-footer').show();
+            modal.find('#pv-autosearch-add-btn').hide();
+        },
+
+        addToLibrary: function () {
+            const self = this;
+            if (!this.pendingIngredient) return;
+
+            const addBtn = $('#pv-autosearch-add-btn');
+            addBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Adding...');
+
+            $.ajax({
+                url: this.apiEndpoint + '?action=add',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ ingredient: this.pendingIngredient }),
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        $('#toast-title').html('<i class="fa-solid fa-circle-check me-2"></i>' + response.message);
+                        $('.toast-header').removeClass().addClass('toast-header alert-success');
+                        $('.toast').toast('show');
+                        self.getOrCreateModal().modal('hide');
+                        self.dataTable.ajax.reload(null, false);
+                        $('#ing_search').val('');
+                        self.pendingIngredient = null;
+                         addBtn.prop('disabled', false).html('<i class="fas fa-plus me-2"></i>Add to My Library');
+                    } else {
+                        self.showError(response.error || 'Failed to add ingredient.');
+                        addBtn.prop('disabled', false).html('<i class="fas fa-plus me-2"></i>Add to My Library');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    self.showError('Failed to add: ' + error);
+                    addBtn.prop('disabled', false).html('<i class="fas fa-plus me-2"></i>Add to My Library');
+                }
+            });
+        },
+
+        getOrCreateModal: function () {
+            let modal = $('#pv-autosearch-modal');
+            if (modal.length === 0) {
+                $('body').append(
+                    '<div class="modal fade" id="pv-autosearch-modal" tabindex="-1" aria-hidden="true">' +
+                    '<div class="modal-dialog modal-lg"><div class="modal-content">' +
+                    '<div class="modal-header"><h5 class="modal-title"><i class="fas fa-globe me-2"></i>Online Ingredient Search</h5>' +
+                    '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>' +
+                    '<div class="modal-body"></div>' +
+                    '<div class="modal-footer">' +
+                    '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' +
+                    '<button type="button" class="btn btn-primary" id="pv-autosearch-add-btn"><i class="fas fa-plus me-2"></i>Add to My Library</button>' +
+                    '</div></div></div></div>'
+                );
+                modal = $('#pv-autosearch-modal');
+            }
+            return modal;
+        },
+
+        escapeHtml: function (text) {
+             if (!text) return '';
+             return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        },
+
+        getZeroRecordsHtml: function () {
+            return `
+                <div class="alert alert-warning mt-2">
+                    <i class="fa-solid fa-triangle-exclamation mx-2"></i>
+                    <strong>Nothing found in your library.</strong>
+                </div>
+                <div class="text-center my-3">
+                    <button type="button" class="btn btn-outline-primary" id="pv-autosearch-btn">
+                        <i class="fas fa-globe me-2"></i>Search Online (PubChem & TGSC)
+                    </button>
+                </div>
+            `;
+        }
+    };
+})();
+
 $(document).ready(function() {
 	var table = $('#tdDataIng').DataTable();
 	AutoSearch.init(table);

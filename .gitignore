@@ -7,3 +7,9 @@ batches/
 inc/config.php
 tests/
 classes/
+
+# Python / Automation
+automation/venv/
+automation/data/cache/
+**/__pycache__/
+*.pyc

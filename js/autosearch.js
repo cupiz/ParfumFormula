@@ -4,8 +4,9 @@
  * Handles automatic online ingredient search when local results are empty.
  * Integrates with Python automation API via PHP bridge.
  */
+console.log("🚀 Auto-Search Module Loaded v2.0");
 
-const AutoSearch = {
+var AutoSearch = (function() {
     // Configuration
     apiEndpoint: '/api.php?request=ingredient_autosearch',
     searchTimeout: 60000, // 60 seconds for scraping
@@ -136,7 +137,26 @@ const AutoSearch = {
                         <th>Odor Description</th>
                         <td>${ingredient.odor_description || '<em class="text-muted">Not found</em>'}</td>
                     </tr>
+                    <tr>
+                         <th>Tenacity</th>
+                         <td>${ingredient.tenacity || '<em class="text-muted">Not found</em>'}</td>
+                    </tr>
+                    <tr>
+                         <th>Flash Point</th>
+                         <td>${ingredient.flash_point ? ingredient.flash_point + (ingredient.flash_point.includes('°') ? '' : ' °C') : '<em class="text-muted">Not found</em>'}</td>
+                    </tr>
+                     <tr>
+                         <th>LogP</th>
+                         <td>${ingredient.logp || '<em class="text-muted">Not found</em>'}</td>
+                    </tr>
+                    <tr>
+                         <th>Solubility</th>
+                         <td>${ingredient.solubility || '<em class="text-muted">Not found</em>'}</td>
+                    </tr>
                     ${ingredient.fema ? `<tr><th>FEMA</th><td>${ingredient.fema}</td></tr>` : ''}
+                    ${ingredient.einecs ? `<tr><th>EINECS</th><td>${ingredient.einecs}</td></tr>` : ''}
+                    ${ingredient.reach ? `<tr><th>REACH</th><td>${ingredient.reach}</td></tr>` : ''}
+                    ${ingredient.shelf_life ? `<tr><th>Shelf Life</th><td>${ingredient.shelf_life} month(s)</td></tr>` : ''}
                 </tbody>
             </table>
         `;
