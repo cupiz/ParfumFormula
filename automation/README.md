@@ -7,8 +7,10 @@ ingredient data into the ParfumVault database, eliminating manual entry.
 
 - **Smart Ingredient Enrichment**: Input "Bergamot" and automatically fetch CAS number,
   molecular formula, weight, and IFRA limits
-- **Multi-Source Data**: Combines data from PubChem (primary) and Common Chemistry (CAS)
+- **Multi-Source Data**: Combines data from PubChem (primary) and TGSC (odor profiles)
 - **IFRA Standards Sync**: Parse official IFRA limits from CSV and populate compliance tables
+- **REST API Server**: Flask-based API for real-time ingredient search from the web UI
+- **Auto-Search Online**: Integrated with PHP frontend—search 100M+ compounds when not found locally
 - **Safe Updates**: Only fills missing fields—never overwrites user customizations
 - **Rate Limiting**: Respects external servers with configurable delays
 - **Caching**: Avoids redundant requests with response caching
@@ -100,6 +102,48 @@ docker compose run automation python ingestor.py status
 
 # Update ingredient IFRA limits from library
 docker compose run automation python ingestor.py --target update-ifra-limits
+```
+
+## REST API Server
+
+The automation module includes a **Flask-based REST API** that integrates with the PHP frontend for real-time ingredient search.
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check (returns service status) |
+| `GET` | `/search?name=xxx` | Search TGSC + PubChem for ingredient |
+| `POST` | `/enrich` | Search and save ingredient to database |
+
+### Example Response (`/search?name=Linalool`)
+
+```json
+{
+  "success": true,
+  "ingredient": {
+    "name": "Linalool",
+    "cas": "78-70-6",
+    "cid": 6549,
+    "formula": "C10H18O",
+    "molecular_weight": "154.25",
+    "iupac_name": "3,7-dimethylocta-1,6-dien-3-ol",
+    "odor_description": "floral woody citrus",
+    "fema": "FEMA 2635"
+  },
+  "sources": {"tgsc": true, "pubchem": true}
+}
+```
+
+### Running the API Server
+
+The API server runs automatically via Docker Compose on port 5001 (internal network).
+For standalone testing:
+
+```bash
+cd automation
+pip install -r requirements.txt
+python api_server.py  # Runs on http://localhost:5001
 ```
 
 ## Configuration

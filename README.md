@@ -39,6 +39,20 @@ Your vault comes pre-loaded with a curated list of **300+ Industry-Standard Ingr
 * Oraganized by family (Citrus, Floral, Woody, Musk, etc.)
 * Ready to ingest with a single command.
 
+### 🔍 4. Auto-Search Online (NEW!)
+
+**Can't find an ingredient?** No problem! When you search for an ingredient that doesn't exist in your local database:
+
+* A **"Search Online"** button appears automatically
+* Click it to search **100M+ compounds** from PubChem & TGSC
+* Preview the data (CAS, Formula, Odor Profile, FEMA number)
+* One-click **"Add to Library"** saves it directly to your database
+
+```
+User searches "Hedione" → Not found locally → Click "Search Online" 
+→ API fetches from PubChem & TGSC → Preview shown → Add to Library ✓
+```
+
 ---
 
 ## 💎 Core Features
